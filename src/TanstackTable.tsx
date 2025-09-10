@@ -1,4 +1,3 @@
-import React, { FC, useCallback, useState } from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -8,6 +7,7 @@ import {
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
+import { FC, useCallback, useState } from "react";
 
 export interface PaginationDetails {
   current_page: number;
