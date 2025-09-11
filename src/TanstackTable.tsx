@@ -7,13 +7,14 @@ import {
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
+import clsx from "clsx";
 import { FC, useCallback, useState } from "react";
 
 export interface PaginationDetails {
   current_page: number;
   total_pages: number;
-  total_count?: number; // Optional for backward compatibility
-  total_records?: number; // Added to match provided PaginationComponent
+  total_count?: number;
+  total_records?: number;
   page_size: number;
 }
 
@@ -40,6 +41,16 @@ export interface PageProps<T> {
   showNoDataIcon?: boolean;
   noDataHeight?: string;
   onRowClick?: (row: T) => void;
+  tableClassName?: string;
+  theadClassName?: string;
+  tbodyClassName?: string;
+  thClassName?: string;
+  trClassName?: string;
+  tdClassName?: string;
+  paginationClassName?: string;
+  noDataClassName?: string;
+  loadingRowClassName?: string;
+  sortIconClassName?: string;
 }
 
 const TanStackTable: FC<PageProps<any>> = ({
@@ -55,6 +66,16 @@ const TanStackTable: FC<PageProps<any>> = ({
   showNoDataIcon = true,
   noDataHeight,
   onRowClick,
+  tableClassName = "",
+  theadClassName = "",
+  tbodyClassName = "",
+  thClassName = "",
+  trClassName = "",
+  tdClassName = "",
+  paginationClassName = "",
+  noDataClassName = "",
+  loadingRowClassName = "",
+  sortIconClassName = "",
 }) => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const shouldStickyLastColumn = columns.length > 6;
@@ -200,24 +221,36 @@ const TanStackTable: FC<PageProps<any>> = ({
       >
         {loading ? (
           <div className="w-full h-full flex flex-col">
-            <table className="w-full border-collapse bg-white min-w-full table-fixed">
-              <thead className="bg-black border-b">
+            <table
+              className={clsx(
+                "w-full border-collapse bg-white min-w-full table-fixed",
+                tableClassName
+              )}
+            >
+              <thead className={clsx("bg-black border-b", theadClassName)}>
                 {table.getHeaderGroups().map((headerGroup) => (
-                  <tr key={headerGroup.id} className="border-b">
+                  <tr
+                    key={headerGroup.id}
+                    className={clsx("border-b", trClassName)}
+                  >
                     {headerGroup.headers.map(
                       (header: Header<any, unknown>, index: number) => (
                         <th
                           key={`${header.id}-${index}`}
                           colSpan={header.colSpan}
-                          className="bg-black text-left px-3 py-2 text-sm font-normal text-white/90 sticky top-0 z-10"
+                          className={clsx(
+                            "bg-black text-left px-3 py-2 text-sm font-normal text-white/90 sticky top-0 z-10",
+                            thClassName
+                          )}
                           style={getColumnStyle(header.id, index)}
                         >
                           <div
-                            className={`flex items-center gap-2 ${
+                            className={clsx(
+                              `flex items-center gap-2`,
                               header.column.getCanSort()
                                 ? "cursor-pointer select-none"
                                 : ""
-                            }`}
+                            )}
                             onClick={() => sortAndGetData(header)}
                           >
                             {flexRender(
@@ -229,6 +262,7 @@ const TanStackTable: FC<PageProps<any>> = ({
                               removeSortingForColumnIds={
                                 removeSortingForColumnIds
                               }
+                              className={sortIconClassName}
                             />
                           </div>
                         </th>
@@ -237,18 +271,27 @@ const TanStackTable: FC<PageProps<any>> = ({
                   </tr>
                 ))}
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody
+                className={clsx("divide-y divide-gray-200", tbodyClassName)}
+              >
                 {[...Array(paginationDetails?.page_size || 15)].map((_, i) => (
                   <tr
                     key={`loading-row-${i}`}
-                    className={`border-b border-b-gray-100 ${
-                      i % 2 === 0 ? "bg-white" : "bg-gray-50"
-                    }`}
+                    className={clsx(
+                      `border-b border-b-gray-100 ${
+                        i % 2 === 0 ? "bg-white" : "bg-gray-50"
+                      }`,
+                      trClassName,
+                      loadingRowClassName
+                    )}
                   >
                     {[...Array(columns.length)].map((_, j) => (
                       <td
                         key={`loading-cell-${i}-${j}`}
-                        className="px-4 py-3 text-sm text-gray-900 whitespace-nowrap"
+                        className={clsx(
+                          "px-4 py-3 text-sm text-gray-900 whitespace-nowrap",
+                          tdClassName
+                        )}
                         style={getCellStyle(j, i % 2 === 0)}
                       >
                         {j === 1 ? (
@@ -274,28 +317,41 @@ const TanStackTable: FC<PageProps<any>> = ({
             description={noDataDescription}
             showIcon={showNoDataIcon}
             height={noDataHeight || heightClass || "h-96"}
+            className={noDataClassName}
           />
         ) : (
           <div className="w-full h-full flex flex-col">
             <div className="w-full overflow-auto custom-scrollbar">
-              <table className="w-full border border-gray-200 border-collapse bg-white min-w-full table-fixed">
-                <thead className="bg-black border-b">
+              <table
+                className={clsx(
+                  "w-full border border-gray-200 border-collapse bg-white min-w-full table-fixed",
+                  tableClassName
+                )}
+              >
+                <thead className={clsx("bg-black border-b", theadClassName)}>
                   {table.getHeaderGroups().map((headerGroup) => (
-                    <tr key={headerGroup.id} className="border-b">
+                    <tr
+                      key={headerGroup.id}
+                      className={clsx("border-b", trClassName)}
+                    >
                       {headerGroup.headers.map(
                         (header: Header<any, unknown>, index: number) => (
                           <th
                             key={`${header.id}-${index}`}
                             colSpan={header.colSpan}
-                            className="bg-black text-left px-3 py-2 text-sm font-normal text-white/90 sticky top-0 z-10"
+                            className={clsx(
+                              "bg-black text-left px-3 py-2 text-sm font-normal text-white/90 sticky top-0 z-10",
+                              thClassName
+                            )}
                             style={getColumnStyle(header.id, index)}
                           >
                             <div
-                              className={`flex items-center gap-2 ${
+                              className={clsx(
+                                `flex items-center gap-2`,
                                 header.column.getCanSort()
                                   ? "cursor-pointer select-none"
                                   : ""
-                              }`}
+                              )}
                               onClick={() => sortAndGetData(header)}
                             >
                               {flexRender(
@@ -307,6 +363,7 @@ const TanStackTable: FC<PageProps<any>> = ({
                                 removeSortingForColumnIds={
                                   removeSortingForColumnIds
                                 }
+                                className={sortIconClassName}
                               />
                             </div>
                           </th>
@@ -315,22 +372,30 @@ const TanStackTable: FC<PageProps<any>> = ({
                     </tr>
                   ))}
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody
+                  className={clsx("divide-y divide-gray-200", tbodyClassName)}
+                >
                   {data?.length ? (
                     table.getRowModel().rows.map((row, index) => (
                       <tr
                         key={row.id}
-                        className={`transition-colors duration-200 border-b border-b-gray-100 cursor-pointer ${
-                          index % 2 === 0
-                            ? "bg-white hover:bg-gray-100"
-                            : "bg-gray-50 hover:bg-gray-100"
-                        }`}
+                        className={clsx(
+                          `transition-colors duration-200 border-b border-b-gray-100 cursor-pointer ${
+                            index % 2 === 0
+                              ? "bg-white hover:bg-gray-100"
+                              : "bg-gray-50 hover:bg-gray-100"
+                          }`,
+                          trClassName
+                        )}
                         onClick={() => onRowClick?.(row.original)}
                       >
                         {row.getVisibleCells().map((cell, cellIndex) => (
                           <td
                             key={cell.id}
-                            className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap"
+                            className={clsx(
+                              "px-4 py-2 text-sm text-gray-900 whitespace-nowrap",
+                              tdClassName
+                            )}
                             style={getCellStyle(cellIndex, index % 2 === 0)}
                           >
                             {flexRender(
@@ -342,13 +407,17 @@ const TanStackTable: FC<PageProps<any>> = ({
                       </tr>
                     ))
                   ) : (
-                    <tr>
-                      <td colSpan={columns.length} className="text-center py-8">
+                    <tr className={trClassName}>
+                      <td
+                        colSpan={columns.length}
+                        className={clsx("text-center py-8", tdClassName)}
+                      >
                         <NoDataDisplay
                           title={noDataLabel || "No Data Available"}
                           description={noDataDescription}
                           showIcon={showNoDataIcon}
                           height={noDataHeight || heightClass || "h-96"}
+                          className={noDataClassName}
                         />
                       </td>
                     </tr>
@@ -360,7 +429,7 @@ const TanStackTable: FC<PageProps<any>> = ({
         )}
       </div>
       {!loading && data?.length && paginationDetails ? (
-        <div className="border-gray-200">
+        <div className={clsx("border-gray-200", paginationClassName)}>
           <PaginationComponent
             paginationDetails={paginationDetails}
             capturePageNum={capturePageNum}
@@ -376,13 +445,14 @@ const TanStackTable: FC<PageProps<any>> = ({
 const SortItems: FC<{
   header: Header<any, unknown>;
   removeSortingForColumnIds?: string[];
-}> = ({ header, removeSortingForColumnIds = [] }) => {
+  className?: string;
+}> = ({ header, removeSortingForColumnIds = [], className = "" }) => {
   const currentSort = header.column.getIsSorted();
   if (removeSortingForColumnIds.includes(header.id)) {
     return null;
   }
   return (
-    <div className="flex items-center">
+    <div className={clsx("flex items-center", className)}>
       {currentSort === "asc" ? (
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
           <path d="M3 5l7-4 7 4H3z" />
@@ -588,12 +658,16 @@ const NoDataDisplay: FC<{
   description?: string;
   showIcon?: boolean;
   height?: string;
-}> = ({ title, description, showIcon = true, height }) => {
+  className?: string;
+}> = ({ title, description, showIcon = true, height, className = "" }) => {
   return (
     <div
-      className={`flex flex-col items-center justify-center ${
-        height || "h-96"
-      } text-center p-4`}
+      className={clsx(
+        `flex flex-col items-center justify-center ${
+          height || "h-96"
+        } text-center p-4`,
+        className
+      )}
     >
       {showIcon && (
         <svg
