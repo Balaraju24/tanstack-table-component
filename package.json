@@ -1,6 +1,6 @@
 {
   "name": "tanstack-table-component",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "A reusable TanStack Table component for React with sorting, pagination, and custom rendering",
   "main": "dist/TanstackTable.js",
   "types": "dist/TanstackTable.d.ts",
