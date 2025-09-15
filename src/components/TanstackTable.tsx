@@ -1,3 +1,12 @@
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   flexRender,
   getCoreRowModel,
@@ -7,8 +16,26 @@ import {
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import clsx from "clsx";
+import { cn } from "@/lib/utils";
 import { FC, useCallback, useState } from "react";
+import "../styles/custom.css";
+import { Input } from "./ui/input";
+import {
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationPrevious as ShadCNPagination,
+} from "./ui/pagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
 export interface PaginationDetails {
   current_page: number;
@@ -221,32 +248,116 @@ const TanStackTable: FC<PageProps<any>> = ({
       >
         {loading ? (
           <div className="w-full h-full flex flex-col">
-            <table
-              className={clsx(
-                "w-full border-collapse bg-white min-w-full table-fixed",
-                tableClassName
-              )}
-            >
-              <thead className={clsx("bg-black border-b", theadClassName)}>
+            <Table className={cn("min-w-full", tableClassName)}>
+              <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
-                  <tr
-                    key={headerGroup.id}
-                    className={clsx("border-b", trClassName)}
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header, index) => (
+                      <TableHead
+                        key={`${header.id}-${index}`}
+                        colSpan={header.colSpan}
+                        className={cn(
+                          "px-3 py-2 text-left text-sm font-normal",
+                          thClassName
+                        )}
+                        style={getColumnStyle(header.id, index)}
+                      >
+                        <div
+                          className={cn(
+                            "flex items-center gap-2",
+                            header.column.getCanSort()
+                              ? "cursor-pointer select-none"
+                              : ""
+                          )}
+                          onClick={() => sortAndGetData(header)}
+                        >
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                          <SortItems
+                            header={header}
+                            removeSortingForColumnIds={
+                              removeSortingForColumnIds
+                            }
+                            className={sortIconClassName}
+                          />
+                        </div>
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody
+                className={cn("divide-y divide-gray-200", tbodyClassName)}
+              >
+                {[...Array(paginationDetails?.page_size || 15)].map((_, i) => (
+                  <TableRow
+                    key={`loading-row-${i}`}
+                    className={cn(
+                      `border-b border-b-gray-100 ${
+                        i % 2 === 0 ? "bg-white" : "bg-gray-50"
+                      }`,
+                      trClassName,
+                      loadingRowClassName
+                    )}
                   >
-                    {headerGroup.headers.map(
-                      (header: Header<any, unknown>, index: number) => (
-                        <th
+                    {[...Array(columns.length)].map((_, j) => (
+                      <TableCell
+                        key={`loading-cell-${i}-${j}`}
+                        className={cn("px-4 py-3 text-sm", tdClassName)}
+                        style={getCellStyle(j, i % 2 === 0)}
+                      >
+                        {j === 1 ? (
+                          <div className="p-2 flex gap-2 items-center">
+                            <Skeleton className="h-7 w-7 rounded-full" />
+                            <Skeleton className="h-3 w-3/5" />
+                          </div>
+                        ) : (
+                          <div className="p-2">
+                            <Skeleton className="h-3 w-3/5" />
+                          </div>
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        ) : !data.length ? (
+          <NoDataDisplay
+            title={noDataLabel || "No Data Available"}
+            description={noDataDescription}
+            showIcon={showNoDataIcon}
+            height={noDataHeight || heightClass || "h-96"}
+            className={noDataClassName}
+          />
+        ) : (
+          <div className="w-full h-full flex flex-col">
+            <div className="w-full overflow-auto custom-scrollbar">
+              <Table className={cn("min-w-full", tableClassName)}>
+                <TableHeader
+                  className={cn("bg-black border-b", theadClassName)}
+                >
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow
+                      key={headerGroup.id}
+                      className={cn("border-b", trClassName)}
+                    >
+                      {headerGroup.headers.map((header, index) => (
+                        <TableHead
                           key={`${header.id}-${index}`}
                           colSpan={header.colSpan}
-                          className={clsx(
+                          className={cn(
                             "bg-black text-left px-3 py-2 text-sm font-normal text-white/90 sticky top-0 z-10",
                             thClassName
                           )}
                           style={getColumnStyle(header.id, index)}
                         >
                           <div
-                            className={clsx(
-                              `flex items-center gap-2`,
+                            className={cn(
+                              "flex items-center gap-2",
                               header.column.getCanSort()
                                 ? "cursor-pointer select-none"
                                 : ""
@@ -265,121 +376,19 @@ const TanStackTable: FC<PageProps<any>> = ({
                               className={sortIconClassName}
                             />
                           </div>
-                        </th>
-                      )
-                    )}
-                  </tr>
-                ))}
-              </thead>
-              <tbody
-                className={clsx("divide-y divide-gray-200", tbodyClassName)}
-              >
-                {[...Array(paginationDetails?.page_size || 15)].map((_, i) => (
-                  <tr
-                    key={`loading-row-${i}`}
-                    className={clsx(
-                      `border-b border-b-gray-100 ${
-                        i % 2 === 0 ? "bg-white" : "bg-gray-50"
-                      }`,
-                      trClassName,
-                      loadingRowClassName
-                    )}
-                  >
-                    {[...Array(columns.length)].map((_, j) => (
-                      <td
-                        key={`loading-cell-${i}-${j}`}
-                        className={clsx(
-                          "px-4 py-3 text-sm text-gray-900 whitespace-nowrap",
-                          tdClassName
-                        )}
-                        style={getCellStyle(j, i % 2 === 0)}
-                      >
-                        {j === 1 ? (
-                          <div className="p-2 flex gap-2 items-center">
-                            <div className="h-7 w-7 bg-gray-200 rounded-full" />
-                            <div className="h-3 w-3/5 bg-gray-200" />
-                          </div>
-                        ) : (
-                          <div className="p-2">
-                            <div className="h-3 w-3/5 bg-gray-200" />
-                          </div>
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : !data.length ? (
-          <NoDataDisplay
-            title={noDataLabel || "No Data Available"}
-            description={noDataDescription}
-            showIcon={showNoDataIcon}
-            height={noDataHeight || heightClass || "h-96"}
-            className={noDataClassName}
-          />
-        ) : (
-          <div className="w-full h-full flex flex-col">
-            <div className="w-full overflow-auto custom-scrollbar">
-              <table
-                className={clsx(
-                  "w-full border border-gray-200 border-collapse bg-white min-w-full table-fixed",
-                  tableClassName
-                )}
-              >
-                <thead className={clsx("bg-black border-b", theadClassName)}>
-                  {table.getHeaderGroups().map((headerGroup) => (
-                    <tr
-                      key={headerGroup.id}
-                      className={clsx("border-b", trClassName)}
-                    >
-                      {headerGroup.headers.map(
-                        (header: Header<any, unknown>, index: number) => (
-                          <th
-                            key={`${header.id}-${index}`}
-                            colSpan={header.colSpan}
-                            className={clsx(
-                              "bg-black text-left px-3 py-2 text-sm font-normal text-white/90 sticky top-0 z-10",
-                              thClassName
-                            )}
-                            style={getColumnStyle(header.id, index)}
-                          >
-                            <div
-                              className={clsx(
-                                `flex items-center gap-2`,
-                                header.column.getCanSort()
-                                  ? "cursor-pointer select-none"
-                                  : ""
-                              )}
-                              onClick={() => sortAndGetData(header)}
-                            >
-                              {flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
-                              <SortItems
-                                header={header}
-                                removeSortingForColumnIds={
-                                  removeSortingForColumnIds
-                                }
-                                className={sortIconClassName}
-                              />
-                            </div>
-                          </th>
-                        )
-                      )}
-                    </tr>
+                        </TableHead>
+                      ))}
+                    </TableRow>
                   ))}
-                </thead>
-                <tbody
-                  className={clsx("divide-y divide-gray-200", tbodyClassName)}
+                </TableHeader>
+                <TableBody
+                  className={cn("divide-y divide-gray-200", tbodyClassName)}
                 >
                   {data?.length ? (
                     table.getRowModel().rows.map((row, index) => (
-                      <tr
+                      <TableRow
                         key={row.id}
-                        className={clsx(
+                        className={cn(
                           `transition-colors duration-200 border-b border-b-gray-100 cursor-pointer ${
                             index % 2 === 0
                               ? "bg-white hover:bg-gray-100"
@@ -390,9 +399,9 @@ const TanStackTable: FC<PageProps<any>> = ({
                         onClick={() => onRowClick?.(row.original)}
                       >
                         {row.getVisibleCells().map((cell, cellIndex) => (
-                          <td
+                          <TableCell
                             key={cell.id}
-                            className={clsx(
+                            className={cn(
                               "px-4 py-2 text-sm text-gray-900 whitespace-nowrap",
                               tdClassName
                             )}
@@ -402,15 +411,15 @@ const TanStackTable: FC<PageProps<any>> = ({
                               cell.column.columnDef.cell,
                               cell.getContext()
                             )}
-                          </td>
+                          </TableCell>
                         ))}
-                      </tr>
+                      </TableRow>
                     ))
                   ) : (
-                    <tr className={trClassName}>
-                      <td
+                    <TableRow className={trClassName}>
+                      <TableCell
                         colSpan={columns.length}
-                        className={clsx("text-center py-8", tdClassName)}
+                        className={cn("text-center py-8", tdClassName)}
                       >
                         <NoDataDisplay
                           title={noDataLabel || "No Data Available"}
@@ -419,17 +428,17 @@ const TanStackTable: FC<PageProps<any>> = ({
                           height={noDataHeight || heightClass || "h-96"}
                           className={noDataClassName}
                         />
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   )}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           </div>
         )}
       </div>
       {!loading && data?.length && paginationDetails ? (
-        <div className={clsx("border-gray-200", paginationClassName)}>
+        <div className={cn("border-gray-200", paginationClassName)}>
           <PaginationComponent
             paginationDetails={paginationDetails}
             capturePageNum={capturePageNum}
@@ -452,7 +461,7 @@ const SortItems: FC<{
     return null;
   }
   return (
-    <div className={clsx("flex items-center", className)}>
+    <div className={cn("flex items-center", className)}>
       {currentSort === "asc" ? (
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
           <path d="M3 5l7-4 7 4H3z" />
@@ -478,17 +487,17 @@ interface PaginationComponentProps {
   limitOptionsFromProps?: LimitOption[];
 }
 
-const PaginationComponent: FC<PaginationComponentProps> = ({
-  paginationDetails,
+const PaginationComponent: React.FC<PaginationComponentProps> = ({
   capturePageNum,
   captureRowPerItems,
   initialPage = 1,
   limitOptionsFromProps = [],
+  paginationDetails,
 }) => {
   const [inputPageValue, setInputPageValue] = useState<string>(
     initialPage.toString()
   );
-  const [limitOptions] = useState<LimitOption[]>(
+  const [limitOptions, setLimitOptions] = useState<LimitOption[]>(
     limitOptionsFromProps.length
       ? limitOptionsFromProps
       : [
@@ -502,8 +511,7 @@ const PaginationComponent: FC<PaginationComponentProps> = ({
 
   const totalPages = paginationDetails?.total_pages ?? 1;
   const selectedValue = paginationDetails?.page_size ?? 15;
-  const totalRecords =
-    paginationDetails?.total_records ?? paginationDetails?.total_count ?? 0;
+  const totalRecords = paginationDetails?.total_records ?? 0;
   const currentPage = paginationDetails?.current_page ?? initialPage;
 
   const lastIndex = currentPage * selectedValue;
@@ -580,76 +588,107 @@ const PaginationComponent: FC<PaginationComponentProps> = ({
         pageNumbers.push(totalPages);
       }
     }
+
     return pageNumbers;
   }, [currentPage, totalPages]);
 
   return (
-    <div className="flex justify-between items-center p-2 sticky bottom-0 bg-white">
-      <div className="flex items-center gap-5">
-        <div className="flex items-center gap-2">
-          <select
-            value={selectedValue}
-            onChange={(e) => handleRowChange(e.target.value)}
-            className="w-24 text-xs py-1 h-8 border rounded cursor-pointer"
-          >
+    <ShadCNPagination className="flex justify-between items-center !mx-0 !px-0 sticky bottom-0 shadow-none border-none">
+      <PaginationContent className="!px-0 pt-1 flex gap-5">
+        <Select
+          value={selectedValue?.toString()}
+          onValueChange={handleRowChange}
+        >
+          <SelectTrigger className="w-24 text-xs !py-0 !h-8 border cursor-pointer">
+            <SelectValue
+              placeholder="Items per page"
+              className="font-normal text-xs!rounded-none "
+            />
+          </SelectTrigger>
+          <SelectContent className="w-[120px]  text-xs bg-white pointer">
             {limitOptions.map((item) => (
-              <option key={item.value} value={item.value} className="text-xs">
+              <SelectItem
+                value={item.value?.toString()}
+                key={item.value}
+                className="cursor-pointer font-normal text-xs opacity-90"
+              >
                 {item.title}
-              </option>
+              </SelectItem>
             ))}
-          </select>
-          <span className="text-xs opacity-80">
-            {Math.min(firstIndex + 1, totalRecords)} -{" "}
-            {Math.min(lastIndex, totalRecords)} of {totalRecords}
-          </span>
+          </SelectContent>
+        </Select>
+        <div className="font-normal text-xs opacity-80">
+          {Math.min(firstIndex + 1, totalRecords)} -{" "}
+          {Math.min(lastIndex, totalRecords)} of {totalRecords}
         </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <div className="flex items-center text-xs opacity-80">
-          Go to
-          <input
-            value={inputPageValue}
-            onChange={handleInputChange}
-            onKeyDown={onKeyDownInPageChange}
-            className="h-6 w-10 text-center bg-gray-100 rounded text-xs ml-2 border"
-            placeholder="Page"
-          />
-        </div>
-        <div className="flex items-center gap-1">
-          <button
-            className="border rounded p-1 text-xs disabled:opacity-50"
-            disabled={currentPage === 1}
-            onClick={() => handlePageChange(currentPage - 1)}
-          >
-            Previous
-          </button>
+      </PaginationContent>
+      <div className="flex justify-end items-center">
+        <PaginationContent className="px-1 py-0">
+          <div className="flex items-center font-normal text-xs opacity-80">
+            GoTo
+            <Input
+              value={inputPageValue}
+              onChange={handleInputChange}
+              onKeyDown={onKeyDownInPageChange}
+              className="h-6 w-10 text-center bg-gray-300 rounded-none text-xs ml-2"
+              placeholder="Page"
+            />
+          </div>
+        </PaginationContent>
+
+        <PaginationContent className="px-1 py-0 font-normal">
+          <PaginationItem>
+            <PaginationPrevious
+              href={currentPage === 1 ? undefined : "#"}
+              onClick={(e) => {
+                e.preventDefault();
+                if (currentPage > 1) handlePageChange(currentPage - 1);
+              }}
+              aria-disabled={currentPage === 1}
+              className={currentPage === 1 ? "opacity-50 " : ""}
+            />
+          </PaginationItem>
+
           {getPageNumbers().map((pageNumber, index) =>
             pageNumber === null ? (
-              <span key={`ellipsis-${index}`} className="text-xs">
-                ...
-              </span>
+              <PaginationItem key={`ellipsis-${index}`}>
+                <PaginationEllipsis />
+              </PaginationItem>
             ) : (
-              <button
-                key={pageNumber}
-                className={`text-xs px-2 py-1 rounded ${
-                  pageNumber === currentPage ? "bg-black text-white" : "border"
-                }`}
-                onClick={() => handlePageChange(pageNumber)}
-              >
-                {pageNumber}
-              </button>
+              <PaginationItem key={pageNumber}>
+                <PaginationLink
+                  href="#"
+                  isActive={pageNumber === currentPage}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handlePageChange(pageNumber);
+                  }}
+                  className={`text-xs ${
+                    pageNumber === currentPage
+                      ? "bg-black text-white w-6 h-6 rounded-none "
+                      : "rounded-none"
+                  }`}
+                >
+                  {pageNumber}
+                </PaginationLink>
+              </PaginationItem>
             )
           )}
-          <button
-            className="border rounded p-1 text-xs disabled:opacity-50"
-            disabled={currentPage === totalPages}
-            onClick={() => handlePageChange(currentPage + 1)}
-          >
-            Next
-          </button>
-        </div>
+
+          <PaginationItem>
+            <PaginationNext
+              href={currentPage === totalPages ? undefined : "#"}
+              onClick={(e) => {
+                e.preventDefault();
+                if (currentPage < totalPages) handlePageChange(currentPage + 1);
+              }}
+              aria-disabled={currentPage === totalPages}
+              className={currentPage === totalPages ? "opacity-50 " : ""}
+            />
+          </PaginationItem>
+        </PaginationContent>
       </div>
-    </div>
+    </ShadCNPagination>
   );
 };
 
@@ -662,7 +701,7 @@ const NoDataDisplay: FC<{
 }> = ({ title, description, showIcon = true, height, className = "" }) => {
   return (
     <div
-      className={clsx(
+      className={cn(
         `flex flex-col items-center justify-center ${
           height || "h-96"
         } text-center p-4`,
