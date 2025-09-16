@@ -237,7 +237,7 @@ const TanStackTable: FC<PageProps<unknown>> = ({
         });
       }
     },
-    [getData, paginationDetails?.page_size, removeSortingForColumnIds]
+    [getData, paginationDetails?.page_size, removeSortingForColumnIds, sorting]
   );
 
   return (
