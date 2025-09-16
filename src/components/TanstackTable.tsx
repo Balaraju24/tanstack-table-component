@@ -51,6 +51,7 @@ export interface LimitOption {
 }
 
 export interface PageProps<T> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   columns: any[];
   data: T[];
   loading?: boolean;
@@ -80,7 +81,7 @@ export interface PageProps<T> {
   sortIconClassName?: string;
 }
 
-const TanStackTable: FC<PageProps<any>> = ({
+const TanStackTable: FC<PageProps<unknown>> = ({
   columns,
   data,
   loading = false,
@@ -207,6 +208,7 @@ const TanStackTable: FC<PageProps<any>> = ({
   );
 
   const sortAndGetData = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (header: Header<any, unknown>) => {
       if (removeSortingForColumnIds.includes(header.id)) {
         return;
@@ -452,6 +454,7 @@ const TanStackTable: FC<PageProps<any>> = ({
 };
 
 const SortItems: FC<{
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   header: Header<any, unknown>;
   removeSortingForColumnIds?: string[];
   className?: string;
@@ -497,6 +500,7 @@ const PaginationComponent: React.FC<PaginationComponentProps> = ({
   const [inputPageValue, setInputPageValue] = useState<string>(
     initialPage.toString()
   );
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [limitOptions, setLimitOptions] = useState<LimitOption[]>(
     limitOptionsFromProps.length
       ? limitOptionsFromProps
