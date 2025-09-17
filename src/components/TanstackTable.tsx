@@ -69,16 +69,18 @@ export interface PageProps<T> {
   showNoDataIcon?: boolean;
   noDataHeight?: string;
   onRowClick?: (row: T) => void;
+  noDataClassName?: string;
+  sortIconClassName?: string;
+  wrapperClassName?: string;
+  scrollClassName?: string;
   tableClassName?: string;
   theadClassName?: string;
   tbodyClassName?: string;
-  thClassName?: string;
   trClassName?: string;
+  thClassName?: string;
   tdClassName?: string;
-  paginationClassName?: string;
-  noDataClassName?: string;
   loadingRowClassName?: string;
-  sortIconClassName?: string;
+  paginationClassName?: string;
 }
 
 const TanStackTable: FC<PageProps<unknown>> = ({
@@ -104,6 +106,7 @@ const TanStackTable: FC<PageProps<unknown>> = ({
   noDataClassName = "",
   loadingRowClassName = "",
   sortIconClassName = "",
+  scrollClassName = "",
 }) => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const shouldStickyLastColumn = columns.length > 6;
@@ -177,15 +180,16 @@ const TanStackTable: FC<PageProps<unknown>> = ({
           ...baseStyle,
           position: "sticky" as const,
           right: 0,
-          backgroundColor: "black",
-          zIndex: 11,
+          backgroundColor: "white", // Use white for body cells; header already black
+          zIndex: 12, // Higher z-index for last column to avoid overlap
+          borderLeft: "1px solid #e5e7eb", // Add subtle border to separate from scrolling content
         };
       }
       return {
         ...baseStyle,
         position: "sticky" as const,
         top: 0,
-        backgroundColor: "black",
+        backgroundColor: "black", // Header only
         zIndex: 10,
       };
     },
@@ -198,8 +202,9 @@ const TanStackTable: FC<PageProps<unknown>> = ({
         return {
           position: "sticky" as const,
           right: 0,
-          backgroundColor: isEven ? "white" : "#f9fafb",
+          backgroundColor: isEven ? "white" : "#f9fafb", // Match row alternation
           zIndex: 5,
+          borderLeft: "1px solid #e5e7eb", // Consistent border
         };
       }
       return {};
@@ -336,9 +341,23 @@ const TanStackTable: FC<PageProps<unknown>> = ({
             className={noDataClassName}
           />
         ) : (
-          <div className="w-full h-full flex flex-col">
+          <div
+            className={cn(
+              "w-full",
+              heightClass,
+              "overflow-auto custom-scrollbar",
+              scrollClassName || ""
+            )}
+          >
+            {" "}
             <div className="w-full overflow-auto custom-scrollbar">
-              <Table className={cn("min-w-full", tableClassName)}>
+              <Table
+                className={cn(
+                  "min-w-full table-fixed",
+                  tableClassName,
+                  "border-separate"
+                )}
+              >
                 <TableHeader
                   className={cn("bg-black border-b", theadClassName)}
                 >
@@ -352,7 +371,7 @@ const TanStackTable: FC<PageProps<unknown>> = ({
                           key={`${header.id}-${index}`}
                           colSpan={header.colSpan}
                           className={cn(
-                            "bg-black text-left px-3 py-2 text-sm font-normal text-white/90 sticky top-0 z-10",
+                            "bg-black text-left px-3 py-2 text-sm font-normal text-white/90", // Remove inline sticky top-0 z-10; rely on getColumnStyle
                             thClassName
                           )}
                           style={getColumnStyle(header.id, index)}
@@ -383,57 +402,64 @@ const TanStackTable: FC<PageProps<unknown>> = ({
                     </TableRow>
                   ))}
                 </TableHeader>
-                <TableBody
-                  className={cn("divide-y divide-gray-200", tbodyClassName)}
-                >
-                  {data?.length ? (
-                    table.getRowModel().rows.map((row, index) => (
-                      <TableRow
-                        key={row.id}
-                        className={cn(
-                          `transition-colors duration-200 border-b border-b-gray-100 cursor-pointer ${
-                            index % 2 === 0
-                              ? "bg-white hover:bg-gray-100"
-                              : "bg-gray-50 hover:bg-gray-100"
-                          }`,
-                          trClassName
-                        )}
-                        onClick={() => onRowClick?.(row.original)}
-                      >
-                        {row.getVisibleCells().map((cell, cellIndex) => (
-                          <TableCell
-                            key={cell.id}
-                            className={cn(
-                              "px-4 py-2 text-sm text-gray-900 whitespace-nowrap",
-                              tdClassName
-                            )}
-                            style={getCellStyle(cellIndex, index % 2 === 0)}
-                          >
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext()
-                            )}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow className={trClassName}>
-                      <TableCell
-                        colSpan={columns.length}
-                        className={cn("text-center py-8", tdClassName)}
-                      >
-                        <NoDataDisplay
-                          title={noDataLabel || "No Data Available"}
-                          description={noDataDescription}
-                          showIcon={showNoDataIcon}
-                          height={noDataHeight || heightClass || "h-96"}
-                          className={noDataClassName}
-                        />
-                      </TableCell>
-                    </TableRow>
+                <div
+                  className={cn(
+                    "w-full overflow-auto custom-scrollbar",
+                    heightClass
                   )}
-                </TableBody>
+                >
+                  <TableBody
+                    className={cn("divide-y divide-gray-200", tbodyClassName)}
+                  >
+                    {data?.length ? (
+                      table.getRowModel().rows.map((row, index) => (
+                        <TableRow
+                          key={row.id}
+                          className={cn(
+                            `transition-colors duration-200 border-b border-b-gray-100 cursor-pointer ${
+                              index % 2 === 0
+                                ? "bg-white hover:bg-gray-100"
+                                : "bg-gray-50 hover:bg-gray-100"
+                            }`,
+                            trClassName
+                          )}
+                          onClick={() => onRowClick?.(row.original)}
+                        >
+                          {row.getVisibleCells().map((cell, cellIndex) => (
+                            <TableCell
+                              key={cell.id}
+                              className={cn(
+                                "px-4 py-2 text-sm text-gray-900 whitespace-nowrap",
+                                tdClassName
+                              )}
+                              style={getCellStyle(cellIndex, index % 2 === 0)}
+                            >
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext()
+                              )}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow className={trClassName}>
+                        <TableCell
+                          colSpan={columns.length}
+                          className={cn("text-center py-8", tdClassName)}
+                        >
+                          <NoDataDisplay
+                            title={noDataLabel || "No Data Available"}
+                            description={noDataDescription}
+                            showIcon={showNoDataIcon}
+                            height={noDataHeight || heightClass || "h-96"}
+                            className={noDataClassName}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </div>
               </Table>
             </div>
           </div>
