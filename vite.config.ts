@@ -1,9 +1,19 @@
+//vite.config.ts
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import dts from "vite-plugin-dts";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    dts({
+      insertTypesEntry: true,
+      rollupTypes: true,
+      outDir: "dist",
+    }),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -13,17 +23,32 @@ export default defineConfig({
     lib: {
       entry: path.resolve(__dirname, "src/index.tsx"),
       name: "TanStackTableComponent",
-      fileName: (format) => `index.${format === "es" ? "esm" : "cjs"}.js`,
+      fileName: (format) => `index.${format === "es" ? "esm" : "cjs"}`,
       formats: ["es", "cjs"],
     },
     rollupOptions: {
-      external: ["react", "react-dom", "@tanstack/react-table", "clsx"],
+      external: [
+        "react",
+        "react-dom",
+        "@tanstack/react-table",
+        "clsx",
+        "@radix-ui/react-select",
+        "@radix-ui/react-slot",
+        "class-variance-authority",
+        "lucide-react",
+        "tailwind-merge",
+      ],
       output: {
         globals: {
           react: "React",
           "react-dom": "ReactDOM",
           "@tanstack/react-table": "TanstackReactTable",
           clsx: "clsx",
+          "@radix-ui/react-select": "RadixSelect",
+          "@radix-ui/react-slot": "RadixSlot",
+          "class-variance-authority": "ClassVarianceAuthority",
+          "lucide-react": "LucideReact",
+          "tailwind-merge": "TailwindMerge",
         },
       },
     },

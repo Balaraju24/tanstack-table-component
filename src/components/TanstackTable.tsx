@@ -17,7 +17,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { cn } from "@/lib/utils";
-import { FC, useCallback, useState } from "react";
+import { FC, useCallback, useEffect, useState } from "react";
 import "../styles/custom.css";
 import { Input } from "./ui/input";
 import {
@@ -482,86 +482,85 @@ const SortItems: FC<{
   );
 };
 
-interface PaginationComponentProps {
-  paginationDetails: PaginationDetails;
+interface PaginationProps {
   capturePageNum: (page: number) => void;
-  captureRowPerItems: (pageSize: number) => void;
+  captureRowPerItems: (limit: number) => void;
   initialPage?: number;
   limitOptionsFromProps?: LimitOption[];
+  paginationDetails: PaginationDetails;
 }
 
-const PaginationComponent: React.FC<PaginationComponentProps> = ({
+const PaginationComponent: React.FC<PaginationProps> = ({
   capturePageNum,
   captureRowPerItems,
   initialPage = 1,
   limitOptionsFromProps = [],
   paginationDetails,
 }) => {
+  const [currentPage, setCurrentPage] = useState<number>(initialPage);
   const [inputPageValue, setInputPageValue] = useState<string>(
     initialPage.toString()
   );
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [limitOptions, setLimitOptions] = useState<LimitOption[]>(
-    limitOptionsFromProps.length
-      ? limitOptionsFromProps
-      : [
-          { title: "15/page", value: 15 },
-          { title: "25/page", value: 25 },
-          { title: "100/page", value: 100 },
-          { title: "250/page", value: 250 },
-          { title: "500/page", value: 500 },
-        ]
-  );
+  const [limitOptions, setLimitOptions] = useState<LimitOption[]>([]);
 
   const totalPages = paginationDetails?.total_pages ?? 1;
   const selectedValue = paginationDetails?.page_size ?? 15;
   const totalRecords = paginationDetails?.total_records ?? 0;
-  const currentPage = paginationDetails?.current_page ?? initialPage;
 
   const lastIndex = currentPage * selectedValue;
   const firstIndex = lastIndex - selectedValue;
 
-  const handlePageChange = useCallback(
-    (page: number) => {
-      if (page >= 1 && page <= totalPages) {
-        setInputPageValue(page.toString());
-        capturePageNum(page);
-      }
-    },
-    [capturePageNum, totalPages]
-  );
+  useEffect(() => {
+    setLimitOptions(
+      limitOptionsFromProps.length
+        ? limitOptionsFromProps
+        : [
+            { title: "15/page", value: 15 },
+            { title: "25/page", value: 25 },
+            { title: "100/page", value: 100 },
+            { title: "250/page", value: 250 },
+            { title: "500/page", value: 500 },
+          ]
+    );
+  }, [limitOptionsFromProps]);
 
-  const handleRowChange = useCallback(
-    (newLimit: string) => {
-      captureRowPerItems(Number(newLimit));
-    },
-    [captureRowPerItems]
-  );
+  useEffect(() => {
+    if (paginationDetails?.current_page) {
+      setCurrentPage(paginationDetails.current_page);
+      setInputPageValue(paginationDetails.current_page.toString());
+    }
+  }, [paginationDetails]);
 
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value;
-      if (value === "" || /^[0-9]+$/.test(value)) {
-        setInputPageValue(value);
-      }
-    },
-    []
-  );
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      setInputPageValue(page.toString());
+      capturePageNum(page);
+    }
+  };
 
-  const onKeyDownInPageChange = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter") {
-        const page = Math.max(
-          1,
-          Math.min(parseInt(inputPageValue) || 1, totalPages)
-        );
-        handlePageChange(page);
-      }
-    },
-    [inputPageValue, totalPages, handlePageChange]
-  );
+  const handleRowChange = (newLimit: string) => {
+    captureRowPerItems(Number(newLimit));
+  };
 
-  const getPageNumbers = useCallback((): (number | null)[] => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value === "" || /^[0-9]+$/.test(value)) {
+      setInputPageValue(value);
+    }
+  };
+
+  const onKeyDownInPageChange = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      const page = Math.max(
+        1,
+        Math.min(parseInt(inputPageValue) || 1, totalPages)
+      );
+      handlePageChange(page);
+    }
+  };
+
+  const getPageNumbers = (): (number | null)[] => {
     const pageNumbers: (number | null)[] = [];
     const maxVisiblePages = 5;
 
@@ -594,22 +593,22 @@ const PaginationComponent: React.FC<PaginationComponentProps> = ({
     }
 
     return pageNumbers;
-  }, [currentPage, totalPages]);
+  };
 
   return (
-    <ShadCNPagination className="flex justify-between items-center !mx-0 !px-0 sticky bottom-0 shadow-none border-none">
-      <PaginationContent className="!px-0 pt-1 flex gap-5">
+    <ShadCNPagination className="flex justify-between items-center px-2 sticky bottom-0 shadow-inner">
+      <PaginationContent className="px-1 py-0 flex gap-5">
         <Select
           value={selectedValue?.toString()}
           onValueChange={handleRowChange}
         >
-          <SelectTrigger className="w-24 text-xs !py-0 !h-8 border cursor-pointer">
+          <SelectTrigger className="w-24 text-xs py-0 h-6">
             <SelectValue
-              placeholder="Items per page"
-              className="font-normal text-xs!rounded-none "
+              placeholder={`Items per page`}
+              className="font-normal text-xs"
             />
           </SelectTrigger>
-          <SelectContent className="w-[120px]  text-xs bg-white pointer">
+          <SelectContent className="w-[120px] text-xs bg-white pointer">
             {limitOptions.map((item) => (
               <SelectItem
                 value={item.value?.toString()}
@@ -626,6 +625,7 @@ const PaginationComponent: React.FC<PaginationComponentProps> = ({
           {Math.min(lastIndex, totalRecords)} of {totalRecords}
         </div>
       </PaginationContent>
+
       <div className="flex justify-end items-center">
         <PaginationContent className="px-1 py-0">
           <div className="flex items-center font-normal text-xs opacity-80">
@@ -634,7 +634,7 @@ const PaginationComponent: React.FC<PaginationComponentProps> = ({
               value={inputPageValue}
               onChange={handleInputChange}
               onKeyDown={onKeyDownInPageChange}
-              className="h-6 w-10 text-center bg-gray-300 rounded-none text-xs ml-2"
+              className="h-6 w-10 text-center bg-gray-300 text-xs ml-2"
               placeholder="Page"
             />
           </div>
@@ -649,7 +649,9 @@ const PaginationComponent: React.FC<PaginationComponentProps> = ({
                 if (currentPage > 1) handlePageChange(currentPage - 1);
               }}
               aria-disabled={currentPage === 1}
-              className={currentPage === 1 ? "opacity-50 " : ""}
+              className={
+                currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
+              }
             />
           </PaginationItem>
 
@@ -669,8 +671,8 @@ const PaginationComponent: React.FC<PaginationComponentProps> = ({
                   }}
                   className={`text-xs ${
                     pageNumber === currentPage
-                      ? "bg-black text-white w-6 h-6 rounded-none "
-                      : "rounded-none"
+                      ? "bg-gray-300 w-6 h-6 rounded-full"
+                      : ""
                   }`}
                 >
                   {pageNumber}
@@ -687,7 +689,11 @@ const PaginationComponent: React.FC<PaginationComponentProps> = ({
                 if (currentPage < totalPages) handlePageChange(currentPage + 1);
               }}
               aria-disabled={currentPage === totalPages}
-              className={currentPage === totalPages ? "opacity-50 " : ""}
+              className={
+                currentPage === totalPages
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+              }
             />
           </PaginationItem>
         </PaginationContent>
