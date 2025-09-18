@@ -2,7 +2,7 @@
   "name": "tanstack-table-component",
   "version": "1.0.14",
   "description": "A reusable TanStack Table component for React with sorting, pagination, and shadcn/ui integration",
-  "main": "dist/index.cjs",
+  "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
   "type": "module",
@@ -14,9 +14,10 @@
       },
       "require": {
         "types": "./dist/index.d.ts",
-        "default": "./dist/index.cjs"
+        "default": "./dist/index.cjs.js"
       }
-    }
+    },
+    "./style.css": "./dist/style.css"
   },
   "files": [
     "dist"
@@ -42,7 +43,7 @@
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Balaraju24/tanstack-table-component"
+    "url": "git+https://github.com/Balaraju24/tanstack-table-component.git"
   },
   "peerDependencies": {
     "@tanstack/react-table": "^8.0.0",
