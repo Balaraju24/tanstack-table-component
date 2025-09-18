@@ -1,6 +1,6 @@
 {
   "name": "tanstack-table-component",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "A reusable TanStack Table component for React with sorting, pagination, and shadcn/ui integration",
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
