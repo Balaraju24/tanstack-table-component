@@ -387,36 +387,45 @@ const TanStackTable: FC<PageProps<unknown>> = ({
                   className={cn("divide-y divide-gray-200", tbodyClassName)}
                 >
                   {data?.length ? (
-                    table.getRowModel().rows.map((row, index) => (
-                      <TableRow
-                        key={row.id}
-                        className={cn(
-                          `transition-colors duration-200 border-b border-b-gray-100 cursor-pointer ${
-                            index % 2 === 0
-                              ? "bg-white hover:bg-gray-100"
-                              : "bg-gray-50 hover:bg-gray-100"
-                          }`,
-                          trClassName
-                        )}
-                        onClick={() => onRowClick?.(row.original)}
-                      >
-                        {row.getVisibleCells().map((cell, cellIndex) => (
-                          <TableCell
-                            key={cell.id}
+                    table
+                      .getRowModel()
+                      .rows.map((row, index) => {
+                        if (!row.original) {
+                          console.warn("Invalid row data:", row); // Log for debugging
+                          return null; // Skip invalid rows
+                        }
+                        return (
+                          <TableRow
+                            key={row.id}
                             className={cn(
-                              "px-4 py-2 text-sm text-gray-900 whitespace-nowrap",
-                              tdClassName
+                              `transition-colors duration-200 border-b border-b-gray-100 cursor-pointer ${
+                                index % 2 === 0
+                                  ? "bg-white hover:bg-gray-100"
+                                  : "bg-gray-50 hover:bg-gray-100"
+                              }`,
+                              trClassName
                             )}
-                            style={getCellStyle(cellIndex, index % 2 === 0)}
+                            onClick={() => onRowClick?.(row.original)}
                           >
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext()
-                            )}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))
+                            {row.getVisibleCells().map((cell, cellIndex) => (
+                              <TableCell
+                                key={cell.id}
+                                className={cn(
+                                  "px-4 py-2 text-sm text-gray-900 whitespace-nowrap",
+                                  tdClassName
+                                )}
+                                style={getCellStyle(cellIndex, index % 2 === 0)}
+                              >
+                                {flexRender(
+                                  cell.column.columnDef.cell,
+                                  cell.getContext()
+                                )}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        );
+                      })
+                      .filter(Boolean) // Remove null rows
                   ) : (
                     <TableRow className={trClassName}>
                       <TableCell
