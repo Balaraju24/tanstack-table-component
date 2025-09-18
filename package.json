@@ -1,6 +1,6 @@
 {
   "name": "tanstack-table-component",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "description": "A reusable TanStack Table component for React with sorting, pagination, and shadcn/ui integration",
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
@@ -47,16 +47,16 @@
   },
   "peerDependencies": {
     "@tanstack/react-table": "^8.0.0",
+    "@radix-ui/react-select": "^2.2.6",
+    "@radix-ui/react-slot": "^1.2.3",
     "clsx": "^2.1.1",
+    "class-variance-authority": "^0.7.1",
+    "lucide-react": "^0.544.0",
+    "tailwind-merge": "^3.3.1",
     "react": "^18.0.0 || ^19.0.0",
     "react-dom": "^18.0.0 || ^19.0.0"
   },
   "dependencies": {
-    "@radix-ui/react-select": "^2.2.6",
-    "@radix-ui/react-slot": "^1.2.3",
-    "class-variance-authority": "^0.7.1",
-    "lucide-react": "^0.544.0",
-    "tailwind-merge": "^3.3.1",
     "tslib": "^2.8.1"
   },
   "devDependencies": {
