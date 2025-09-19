@@ -1,12 +1,3 @@
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   flexRender,
   getCoreRowModel,
@@ -16,96 +7,52 @@ import {
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { cn } from "@/lib/utils";
-import { FC, useCallback, useEffect, useState } from "react";
-import "../styles/custom.css";
-import { Input } from "./ui/input";
+import { FC, useCallback, useState } from "react";
+
+// External UI building blocks (injectable if needed)
+
+import { useLocation } from "@tanstack/react-router";
+import { TanStackTableProps } from "../lib/core";
+import NoDataDisplay from "./core/NoDataBlock";
+import PaginationComponent from "./core/PaginationComponent";
+import TableSortAscIcon from "./icons/sort-a-icon";
+import TableSortDscIcon from "./icons/sort-d-icon";
+import TableSortNormIcon from "./icons/sort-n-icon";
+import { Skeleton } from "./ui/skeleton";
 import {
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-  PaginationPrevious as ShadCNPagination,
-} from "./ui/pagination";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./ui/select";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "./ui/table";
 
-export interface PaginationDetails {
-  current_page: number;
-  total_pages: number;
-  total_count?: number;
-  total_records?: number;
-  page_size: number;
-}
+// Icons (can be swapped by consumers)
 
-export interface LimitOption {
-  title: string;
-  value: number;
-}
-
-export interface PageProps<T> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  columns: any[];
-  data: T[];
-  loading?: boolean;
-  getData?: (params: {
-    page: number;
-    page_size: number;
-    order_by?: string;
-    order_type?: string;
-  }) => void;
-  paginationDetails?: PaginationDetails;
-  removeSortingForColumnIds?: string[];
-  heightClass?: string;
-  noDataLabel?: string;
-  noDataDescription?: string;
-  showNoDataIcon?: boolean;
-  noDataHeight?: string;
-  onRowClick?: (row: T) => void;
-  tableClassName?: string;
-  theadClassName?: string;
-  tbodyClassName?: string;
-  thClassName?: string;
-  trClassName?: string;
-  tdClassName?: string;
-  paginationClassName?: string;
-  noDataClassName?: string;
-  loadingRowClassName?: string;
-  sortIconClassName?: string;
-}
-
-const TanStackTable: FC<PageProps<unknown>> = ({
+const TanStackTable: FC<TanStackTableProps> = ({
   columns,
   data,
   loading = false,
   getData,
   paginationDetails,
-  removeSortingForColumnIds = [],
+  removeSortingForColumnIds,
   heightClass,
   noDataLabel,
   noDataDescription,
   showNoDataIcon = true,
   noDataHeight,
-  onRowClick,
-  tableClassName = "",
-  theadClassName = "",
-  tbodyClassName = "",
-  thClassName = "",
-  trClassName = "",
-  tdClassName = "",
-  paginationClassName = "",
-  noDataClassName = "",
-  loadingRowClassName = "",
-  sortIconClassName = "",
+  wrapperClassName,
+  tableClassName,
+  headerRowClassName,
+  headerCellClassName,
+  bodyClassName,
+  rowClassName,
+  cellClassName,
 }) => {
+  const searchParams = new URLSearchParams(location?.search);
   const [sorting, setSorting] = useState<SortingState>([]);
+
   const shouldStickyLastColumn = columns.length > 6;
   const lastColumnIndex = columns.length - 1;
 
@@ -119,50 +66,78 @@ const TanStackTable: FC<PageProps<unknown>> = ({
     getSortedRowModel: getSortedRowModel(),
   });
 
+  /** pagination handlers */
   const capturePageNum = useCallback(
     (value: number) => {
-      if (getData) {
-        getData({
-          page: value,
-          page_size: paginationDetails?.page_size || 15,
-          order_by: sorting[0]?.id
-            ? `${sorting[0].id}:${sorting[0].desc ? "desc" : "asc"}`
-            : "",
-          order_type: sorting[0]?.desc ? "desc" : "asc",
-        });
-      }
+      getData({
+        ...searchParams,
+        page_size: searchParams.get("page_size")
+          ? Number(searchParams.get("page_size"))
+          : 15,
+        page: value,
+        order_by: searchParams.get("order_by"),
+        order_type: searchParams.get("order_type"),
+      });
     },
-    [getData, paginationDetails?.page_size, sorting]
+    [getData, searchParams]
   );
 
   const captureRowPerItems = useCallback(
     (value: number) => {
-      if (getData) {
-        getData({
-          page: 1,
-          page_size: value,
-          order_by: sorting[0]?.id
-            ? `${sorting[0].id}:${sorting[0].desc ? "desc" : "asc"}`
-            : "",
-          order_type: sorting[0]?.desc ? "desc" : "asc",
-        });
-      }
+      getData({
+        ...searchParams,
+        page_size: value,
+        page: 1,
+        order_by: searchParams.get("order_by"),
+        order_type: searchParams.get("order_type"),
+      });
     },
-    [getData, sorting]
+    [getData, searchParams]
   );
 
+  /** sorting handler */
+  const sortAndGetData = useCallback(
+    (header: any) => {
+      if (removeSortingForColumnIds?.includes(header.id)) return;
+
+      let sortBy = header.id;
+      let orderBy = `${sortBy}:asc`;
+
+      if (searchParams.get("order_by")?.startsWith(header.id)) {
+        if (searchParams.get("order_by") === `${header.id}:asc`) {
+          orderBy = `${sortBy}:desc`;
+        } else {
+          orderBy = "";
+        }
+      }
+
+      getData({
+        ...searchParams,
+        page: 1,
+        page_size:
+          searchParams.get("page_size") || paginationDetails?.page_size || 15,
+        order_by: orderBy,
+      });
+    },
+    [
+      getData,
+      searchParams,
+      removeSortingForColumnIds,
+      paginationDetails?.page_size,
+    ]
+  );
+
+  /** width + sticky style helpers */
   const getWidth = useCallback(
     (id: string) => {
-      const widthObj = columns.find((col) => col.id === id);
+      const widthObj = columns.find((col: any) => col.id === id);
       return widthObj ? widthObj?.width || widthObj?.size || "100px" : "100px";
     },
     [columns]
   );
 
   const isLastColumn = useCallback(
-    (index: number) => {
-      return shouldStickyLastColumn && index === lastColumnIndex;
-    },
+    (index: number) => shouldStickyLastColumn && index === lastColumnIndex,
     [shouldStickyLastColumn, lastColumnIndex]
   );
 
@@ -172,6 +147,7 @@ const TanStackTable: FC<PageProps<unknown>> = ({
         minWidth: getWidth(headerId),
         width: getWidth(headerId),
       };
+
       if (isLastColumn(index)) {
         return {
           ...baseStyle,
@@ -181,6 +157,7 @@ const TanStackTable: FC<PageProps<unknown>> = ({
           zIndex: 11,
         };
       }
+
       return {
         ...baseStyle,
         position: "sticky" as const,
@@ -193,55 +170,20 @@ const TanStackTable: FC<PageProps<unknown>> = ({
   );
 
   const getCellStyle = useCallback(
-    (index: number, isEven: boolean) => {
-      if (isLastColumn(index)) {
-        return {
-          position: "sticky" as const,
-          right: 0,
-          backgroundColor: isEven ? "white" : "#f9fafb",
-          zIndex: 5,
-        };
-      }
-      return {};
-    },
+    (index: number, isEven: boolean) =>
+      isLastColumn(index)
+        ? {
+            position: "sticky" as const,
+            right: 0,
+            backgroundColor: isEven ? "white" : "#f9fafb",
+            zIndex: 5,
+          }
+        : {},
     [isLastColumn]
   );
 
-  const sortAndGetData = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (header: Header<any, unknown>) => {
-      if (removeSortingForColumnIds.includes(header.id)) {
-        return;
-      }
-      const currentSort = sorting.find((s) => s.id === header.id);
-      let orderBy = "";
-      let orderType = "";
-      if (currentSort) {
-        if (!currentSort.desc) {
-          orderType = "desc";
-          orderBy = `${header.id}:desc`;
-        }
-      } else {
-        orderType = "asc";
-        orderBy = `${header.id}:asc`;
-      }
-      setSorting(
-        orderBy ? [{ id: header.id, desc: orderType === "desc" }] : []
-      );
-      if (getData) {
-        getData({
-          page: 1,
-          page_size: paginationDetails?.page_size || 15,
-          order_by: orderBy,
-          order_type: orderType,
-        });
-      }
-    },
-    [getData, paginationDetails?.page_size, removeSortingForColumnIds, sorting]
-  );
-
   return (
-    <div className="w-full rounded-md bg-white">
+    <div className={`w-full rounded-md bg-white ${wrapperClassName ?? ""}`}>
       <div
         className={`w-full relative bg-white ${
           heightClass || "h-96"
@@ -249,30 +191,184 @@ const TanStackTable: FC<PageProps<unknown>> = ({
         style={{ display: "flex", flexDirection: "column" }}
       >
         {loading ? (
-          <div className="w-full h-full flex flex-col">
-            <Table className={cn("min-w-full", tableClassName)}>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header, index) => (
-                      <TableHead
-                        key={`${header.id}-${index}`}
-                        colSpan={header.colSpan}
-                        className={cn(
-                          "px-3 py-2 text-left text-sm font-normal",
-                          thClassName
-                        )}
-                        style={getColumnStyle(header.id, index)}
-                      >
-                        <div
-                          className={cn(
-                            "flex items-center gap-2",
-                            header.column.getCanSort()
-                              ? "cursor-pointer select-none"
-                              : ""
-                          )}
-                          onClick={() => sortAndGetData(header)}
-                        >
+          <LoadingTable
+            columns={columns}
+            paginationDetails={paginationDetails}
+            getColumnStyle={getColumnStyle}
+            getCellStyle={getCellStyle}
+            headerRowClassName={headerRowClassName}
+            headerCellClassName={headerCellClassName}
+            tableClassName={tableClassName}
+            bodyClassName={bodyClassName}
+            rowClassName={rowClassName}
+            cellClassName={cellClassName}
+            sortAndGetData={sortAndGetData}
+            removeSortingForColumnIds={removeSortingForColumnIds}
+          />
+        ) : !data.length ? (
+          <NoDataDisplay
+            title={noDataLabel || "No Data Available"}
+            description={noDataDescription}
+            showIcon={showNoDataIcon}
+            height={noDataHeight || heightClass || "h-96"}
+          />
+        ) : (
+          <DataTable
+            table={table}
+            columns={columns}
+            getColumnStyle={getColumnStyle}
+            getCellStyle={getCellStyle}
+            headerRowClassName={headerRowClassName}
+            headerCellClassName={headerCellClassName}
+            tableClassName={tableClassName}
+            bodyClassName={bodyClassName}
+            rowClassName={rowClassName}
+            cellClassName={cellClassName}
+            sortAndGetData={sortAndGetData}
+            removeSortingForColumnIds={removeSortingForColumnIds}
+            noDataLabel={noDataLabel}
+            noDataDescription={noDataDescription}
+            showNoDataIcon={showNoDataIcon}
+            noDataHeight={noDataHeight}
+            heightClass={heightClass}
+          />
+        )}
+      </div>
+
+      {!loading && data?.length && paginationDetails ? (
+        <PaginationComponent
+          paginationDetails={paginationDetails}
+          capturePageNum={capturePageNum}
+          captureRowPerItems={captureRowPerItems}
+          initialPage={paginationDetails?.current_page || 1}
+        />
+      ) : null}
+    </div>
+  );
+};
+
+/** Extracted loading skeleton */
+const LoadingTable = ({
+  columns,
+  paginationDetails,
+  getColumnStyle,
+  getCellStyle,
+  headerRowClassName,
+  headerCellClassName,
+  tableClassName,
+  bodyClassName,
+  rowClassName,
+  cellClassName,
+  sortAndGetData,
+  removeSortingForColumnIds,
+}: any) => {
+  return (
+    <div className="w-full h-full flex flex-col">
+      <Table
+        className={`w-full border-collapse min-w-full table-fixed ${
+          tableClassName ?? ""
+        }`}
+      >
+        <TableHeader className="bg-black border-b">
+          <TableRow className={headerRowClassName}>
+            {columns.map((header: any, index: number) => (
+              <TableHead
+                key={`${header.id}-${index}`}
+                className={`bg-black text-left px-3 py-2 text-sm font-normal text-white sticky top-0 z-10 ${
+                  headerCellClassName ?? ""
+                }`}
+                style={getColumnStyle(header.id, index)}
+                onClick={() => sortAndGetData(header)}
+              >
+                {header.header}
+                <SortItems
+                  header={header}
+                  removeSortingForColumnIds={removeSortingForColumnIds}
+                />
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody
+          className={`divide-y divide-gray-200 ${bodyClassName ?? ""}`}
+        >
+          {[...Array(paginationDetails?.page_size || 15)].map((_, i) => (
+            <TableRow
+              key={i}
+              className={`${i % 2 === 0 ? "bg-white" : "bg-gray-50"} ${
+                rowClassName ?? ""
+              }`}
+            >
+              {columns.map((_: any, j: number) => (
+                <TableCell
+                  key={j}
+                  className={`px-4 py-3 text-sm text-gray-900 whitespace-nowrap ${
+                    cellClassName ?? ""
+                  }`}
+                  style={getCellStyle(j, i % 2 === 0)}
+                >
+                  {j === 1 ? (
+                    <div className="p-2 flex gap-2 items-center">
+                      <Skeleton className="h-7 w-7 rounded-full bg-gray-200" />
+                      <Skeleton className="h-3 w-3/5 bg-gray-200 rounded-none" />
+                    </div>
+                  ) : (
+                    <Skeleton className="h-3 w-3/5 bg-gray-200 rounded-none" />
+                  )}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+};
+
+/** Extracted data table */
+const DataTable = ({
+  table,
+  columns,
+  getColumnStyle,
+  getCellStyle,
+  headerRowClassName,
+  headerCellClassName,
+  tableClassName,
+  bodyClassName,
+  rowClassName,
+  cellClassName,
+  sortAndGetData,
+  removeSortingForColumnIds,
+  noDataLabel,
+  noDataDescription,
+  showNoDataIcon,
+  noDataHeight,
+  heightClass,
+}: any) => {
+  return (
+    <div className="w-full h-full flex flex-col">
+      <div className="w-full overflow-auto custom-scrollbar">
+        <Table
+          className={`w-full border border-gray-200 border-collapse min-w-full table-fixed ${
+            tableClassName ?? ""
+          }`}
+        >
+          <TableHeader className="bg-black border-b">
+            {table.getHeaderGroups().map((headerGroup: any) => (
+              <TableRow key={headerGroup.id} className={headerRowClassName}>
+                {headerGroup.headers.map(
+                  (header: Header<any, unknown>, index: number) => (
+                    <TableHead
+                      key={`${header.id}-${index}`}
+                      colSpan={header.colSpan}
+                      className={`bg-black text-left px-3 py-2 text-sm font-normal text-white/90 sticky top-0 z-10 ${
+                        headerCellClassName ?? ""
+                      }`}
+                      style={getColumnStyle(header.id, index)}
+                      onClick={() => sortAndGetData(header)}
+                    >
+                      {header.isPlaceholder ? null : (
+                        <div className="flex items-center gap-2 cursor-pointer">
                           {flexRender(
                             header.column.columnDef.header,
                             header.getContext()
@@ -282,469 +378,91 @@ const TanStackTable: FC<PageProps<unknown>> = ({
                             removeSortingForColumnIds={
                               removeSortingForColumnIds
                             }
-                            className={sortIconClassName}
                           />
                         </div>
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody
-                className={cn("divide-y divide-gray-200", tbodyClassName)}
-              >
-                {[...Array(paginationDetails?.page_size || 15)].map((_, i) => (
-                  <TableRow
-                    key={`loading-row-${i}`}
-                    className={cn(
-                      `border-b border-b-gray-100 ${
-                        i % 2 === 0 ? "bg-white" : "bg-gray-50"
-                      }`,
-                      trClassName,
-                      loadingRowClassName
-                    )}
-                  >
-                    {[...Array(columns.length)].map((_, j) => (
-                      <TableCell
-                        key={`loading-cell-${i}-${j}`}
-                        className={cn("px-4 py-3 text-sm", tdClassName)}
-                        style={getCellStyle(j, i % 2 === 0)}
-                      >
-                        {j === 1 ? (
-                          <div className="p-2 flex gap-2 items-center">
-                            <Skeleton className="h-7 w-7 rounded-full" />
-                            <Skeleton className="h-3 w-3/5" />
-                          </div>
-                        ) : (
-                          <div className="p-2">
-                            <Skeleton className="h-3 w-3/5" />
-                          </div>
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        ) : !data.length ? (
-          <NoDataDisplay
-            title={noDataLabel || "No Data Available"}
-            description={noDataDescription}
-            showIcon={showNoDataIcon}
-            height={noDataHeight || heightClass || "h-96"}
-            className={noDataClassName}
-          />
-        ) : (
-          <div className="w-full h-full flex flex-col">
-            <div className="w-full overflow-auto custom-scrollbar">
-              <Table className={cn("min-w-full", tableClassName)}>
-                <TableHeader
-                  className={cn("bg-black border-b", theadClassName)}
-                >
-                  {table.getHeaderGroups().map((headerGroup) => (
-                    <TableRow
-                      key={headerGroup.id}
-                      className={cn("border-b", trClassName)}
-                    >
-                      {headerGroup.headers.map((header, index) => (
-                        <TableHead
-                          key={`${header.id}-${index}`}
-                          colSpan={header.colSpan}
-                          className={cn(
-                            "bg-black text-left px-3 py-2 text-sm font-normal text-white/90 sticky top-0 z-10",
-                            thClassName
-                          )}
-                          style={getColumnStyle(header.id, index)}
-                        >
-                          <div
-                            className={cn(
-                              "flex items-center gap-2",
-                              header.column.getCanSort()
-                                ? "cursor-pointer select-none"
-                                : ""
-                            )}
-                            onClick={() => sortAndGetData(header)}
-                          >
-                            {flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                            <SortItems
-                              header={header}
-                              removeSortingForColumnIds={
-                                removeSortingForColumnIds
-                              }
-                              className={sortIconClassName}
-                            />
-                          </div>
-                        </TableHead>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableHeader>
-                <TableBody
-                  className={cn("divide-y divide-gray-200", tbodyClassName)}
-                >
-                  {data?.length ? (
-                    table
-                      .getRowModel()
-                      .rows.map((row, index) => {
-                        if (!row.original) {
-                          console.warn("Invalid row data:", row); // Log for debugging
-                          return null; // Skip invalid rows
-                        }
-                        return (
-                          <TableRow
-                            key={row.id}
-                            className={cn(
-                              `transition-colors duration-200 border-b border-b-gray-100 cursor-pointer ${
-                                index % 2 === 0
-                                  ? "bg-white hover:bg-gray-100"
-                                  : "bg-gray-50 hover:bg-gray-100"
-                              }`,
-                              trClassName
-                            )}
-                            onClick={() => onRowClick?.(row.original)}
-                          >
-                            {row.getVisibleCells().map((cell, cellIndex) => (
-                              <TableCell
-                                key={cell.id}
-                                className={cn(
-                                  "px-4 py-2 text-sm text-gray-900 whitespace-nowrap",
-                                  tdClassName
-                                )}
-                                style={getCellStyle(cellIndex, index % 2 === 0)}
-                              >
-                                {flexRender(
-                                  cell.column.columnDef.cell,
-                                  cell.getContext()
-                                )}
-                              </TableCell>
-                            ))}
-                          </TableRow>
-                        );
-                      })
-                      .filter(Boolean) // Remove null rows
-                  ) : (
-                    <TableRow className={trClassName}>
-                      <TableCell
-                        colSpan={columns.length}
-                        className={cn("text-center py-8", tdClassName)}
-                      >
-                        <NoDataDisplay
-                          title={noDataLabel || "No Data Available"}
-                          description={noDataDescription}
-                          showIcon={showNoDataIcon}
-                          height={noDataHeight || heightClass || "h-96"}
-                          className={noDataClassName}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-        )}
-      </div>
-      {!loading && data?.length && paginationDetails ? (
-        <div className={cn("border-gray-200", paginationClassName)}>
-          <PaginationComponent
-            paginationDetails={paginationDetails}
-            capturePageNum={capturePageNum}
-            captureRowPerItems={captureRowPerItems}
-            initialPage={paginationDetails?.current_page || 1}
-          />
-        </div>
-      ) : null}
-    </div>
-  );
-};
-
-const SortItems: FC<{
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  header: Header<any, unknown>;
-  removeSortingForColumnIds?: string[];
-  className?: string;
-}> = ({ header, removeSortingForColumnIds = [], className = "" }) => {
-  const currentSort = header.column.getIsSorted();
-  if (removeSortingForColumnIds.includes(header.id)) {
-    return null;
-  }
-  return (
-    <div className={cn("flex items-center", className)}>
-      {currentSort === "asc" ? (
-        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M3 5l7-4 7 4H3z" />
-        </svg>
-      ) : currentSort === "desc" ? (
-        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M17 15l-7 4-7-4h14z" />
-        </svg>
-      ) : (
-        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M5 7h10v2H5zm0 4h10v2H5z" />
-        </svg>
-      )}
-    </div>
-  );
-};
-
-interface PaginationProps {
-  capturePageNum: (page: number) => void;
-  captureRowPerItems: (limit: number) => void;
-  initialPage?: number;
-  limitOptionsFromProps?: LimitOption[];
-  paginationDetails: PaginationDetails;
-}
-
-const PaginationComponent: React.FC<PaginationProps> = ({
-  capturePageNum,
-  captureRowPerItems,
-  initialPage = 1,
-  limitOptionsFromProps = [],
-  paginationDetails,
-}) => {
-  const [currentPage, setCurrentPage] = useState<number>(initialPage);
-  const [inputPageValue, setInputPageValue] = useState<string>(
-    initialPage.toString()
-  );
-  const [limitOptions, setLimitOptions] = useState<LimitOption[]>([]);
-
-  const totalPages = paginationDetails?.total_pages ?? 1;
-  const selectedValue = paginationDetails?.page_size ?? 15;
-  const totalRecords = paginationDetails?.total_records ?? 0;
-
-  const lastIndex = currentPage * selectedValue;
-  const firstIndex = lastIndex - selectedValue;
-
-  useEffect(() => {
-    setLimitOptions(
-      limitOptionsFromProps.length
-        ? limitOptionsFromProps
-        : [
-            { title: "15/page", value: 15 },
-            { title: "25/page", value: 25 },
-            { title: "100/page", value: 100 },
-            { title: "250/page", value: 250 },
-            { title: "500/page", value: 500 },
-          ]
-    );
-  }, [limitOptionsFromProps]);
-
-  useEffect(() => {
-    if (paginationDetails?.current_page) {
-      setCurrentPage(paginationDetails.current_page);
-      setInputPageValue(paginationDetails.current_page.toString());
-    }
-  }, [paginationDetails]);
-
-  const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-      setInputPageValue(page.toString());
-      capturePageNum(page);
-    }
-  };
-
-  const handleRowChange = (newLimit: string) => {
-    captureRowPerItems(Number(newLimit));
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (value === "" || /^[0-9]+$/.test(value)) {
-      setInputPageValue(value);
-    }
-  };
-
-  const onKeyDownInPageChange = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      const page = Math.max(
-        1,
-        Math.min(parseInt(inputPageValue) || 1, totalPages)
-      );
-      handlePageChange(page);
-    }
-  };
-
-  const getPageNumbers = (): (number | null)[] => {
-    const pageNumbers: (number | null)[] = [];
-    const maxVisiblePages = 5;
-
-    if (totalPages <= maxVisiblePages) {
-      for (let i = 1; i <= totalPages; i++) {
-        pageNumbers.push(i);
-      }
-    } else {
-      if (currentPage <= 3) {
-        for (let i = 1; i <= 4; i++) {
-          pageNumbers.push(i);
-        }
-        pageNumbers.push(null);
-        pageNumbers.push(totalPages);
-      } else if (currentPage >= totalPages - 2) {
-        pageNumbers.push(1);
-        pageNumbers.push(null);
-        for (let i = totalPages - 3; i <= totalPages; i++) {
-          pageNumbers.push(i);
-        }
-      } else {
-        pageNumbers.push(1);
-        pageNumbers.push(null);
-        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
-          pageNumbers.push(i);
-        }
-        pageNumbers.push(null);
-        pageNumbers.push(totalPages);
-      }
-    }
-
-    return pageNumbers;
-  };
-
-  return (
-    <ShadCNPagination className="flex justify-between items-center px-2 sticky bottom-0 shadow-inner">
-      <PaginationContent className="px-1 py-0 flex gap-5">
-        <Select
-          value={selectedValue?.toString()}
-          onValueChange={handleRowChange}
-        >
-          <SelectTrigger className="w-24 text-xs py-0 h-6">
-            <SelectValue
-              placeholder={`Items per page`}
-              className="font-normal text-xs"
-            />
-          </SelectTrigger>
-          <SelectContent className="w-[120px] text-xs bg-white pointer">
-            {limitOptions.map((item) => (
-              <SelectItem
-                value={item.value?.toString()}
-                key={item.value}
-                className="cursor-pointer font-normal text-xs opacity-90"
-              >
-                {item.title}
-              </SelectItem>
+                      )}
+                    </TableHead>
+                  )
+                )}
+              </TableRow>
             ))}
-          </SelectContent>
-        </Select>
-        <div className="font-normal text-xs opacity-80">
-          {Math.min(firstIndex + 1, totalRecords)} -{" "}
-          {Math.min(lastIndex, totalRecords)} of {totalRecords}
-        </div>
-      </PaginationContent>
-
-      <div className="flex justify-end items-center">
-        <PaginationContent className="px-1 py-0">
-          <div className="flex items-center font-normal text-xs opacity-80">
-            GoTo
-            <Input
-              value={inputPageValue}
-              onChange={handleInputChange}
-              onKeyDown={onKeyDownInPageChange}
-              className="h-6 w-10 text-center bg-gray-300 text-xs ml-2"
-              placeholder="Page"
-            />
-          </div>
-        </PaginationContent>
-
-        <PaginationContent className="px-1 py-0 font-normal">
-          <PaginationItem>
-            <PaginationPrevious
-              href={currentPage === 1 ? undefined : "#"}
-              onClick={(e) => {
-                e.preventDefault();
-                if (currentPage > 1) handlePageChange(currentPage - 1);
-              }}
-              aria-disabled={currentPage === 1}
-              className={
-                currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
-              }
-            />
-          </PaginationItem>
-
-          {getPageNumbers().map((pageNumber, index) =>
-            pageNumber === null ? (
-              <PaginationItem key={`ellipsis-${index}`}>
-                <PaginationEllipsis />
-              </PaginationItem>
-            ) : (
-              <PaginationItem key={pageNumber}>
-                <PaginationLink
-                  href="#"
-                  isActive={pageNumber === currentPage}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handlePageChange(pageNumber);
-                  }}
-                  className={`text-xs ${
-                    pageNumber === currentPage
-                      ? "bg-gray-300 w-6 h-6 rounded-full"
-                      : ""
-                  }`}
+          </TableHeader>
+          <TableBody
+            className={`divide-y divide-gray-200 ${bodyClassName ?? ""}`}
+          >
+            {table.getRowModel().rows.length ? (
+              table.getRowModel().rows.map((row: any, index: any) => (
+                <TableRow
+                  key={row.id}
+                  className={`transition-colors duration-200 border-b cursor-pointer ${
+                    index % 2 === 0
+                      ? "bg-white hover:bg-gray-100"
+                      : "bg-gray-50 hover:bg-gray-100"
+                  } ${rowClassName ?? ""}`}
                 >
-                  {pageNumber}
-                </PaginationLink>
-              </PaginationItem>
-            )
-          )}
-
-          <PaginationItem>
-            <PaginationNext
-              href={currentPage === totalPages ? undefined : "#"}
-              onClick={(e) => {
-                e.preventDefault();
-                if (currentPage < totalPages) handlePageChange(currentPage + 1);
-              }}
-              aria-disabled={currentPage === totalPages}
-              className={
-                currentPage === totalPages
-                  ? "opacity-50 cursor-not-allowed"
-                  : ""
-              }
-            />
-          </PaginationItem>
-        </PaginationContent>
+                  {row.getVisibleCells().map((cell: any, cellIndex: any) => (
+                    <TableCell
+                      key={cell.id}
+                      className={`px-4 py-2 text-sm text-gray-900 whitespace-nowrap ${
+                        cellClassName ?? ""
+                      }`}
+                      style={getCellStyle(cellIndex, index % 2 === 0)}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="text-center py-8"
+                >
+                  <NoDataDisplay
+                    title={noDataLabel || "No Data Available"}
+                    description={noDataDescription}
+                    showIcon={showNoDataIcon}
+                    height={noDataHeight || heightClass || "h-96"}
+                  />
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
-    </ShadCNPagination>
+    </div>
   );
 };
 
-const NoDataDisplay: FC<{
-  title: string;
-  description?: string;
-  showIcon?: boolean;
-  height?: string;
-  className?: string;
-}> = ({ title, description, showIcon = true, height, className = "" }) => {
+/** Sorting icons */
+const SortItems = ({
+  header,
+  removeSortingForColumnIds,
+}: {
+  header: any;
+  removeSortingForColumnIds?: string[];
+}) => {
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location?.search);
+  const sortBy = searchParams.get("order_by")?.split(":")[0];
+  const sortDirection = searchParams.get("order_by")?.split(":")[1];
+
+  if (removeSortingForColumnIds?.includes(header.id)) return null;
+
   return (
-    <div
-      className={cn(
-        `flex flex-col items-center justify-center ${
-          height || "h-96"
-        } text-center p-4`,
-        className
-      )}
-    >
-      {showIcon && (
-        <svg
-          className="w-12 h-12 text-gray-400 mb-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-          />
-        </svg>
-      )}
-      <h3 className="text-lg font-medium text-gray-600">{title}</h3>
-      {description && (
-        <p className="text-sm text-gray-500 mt-2">{description}</p>
+    <div className="flex items-center">
+      {sortBy === header.id ? (
+        sortDirection === "asc" ? (
+          <TableSortAscIcon className="size-4" />
+        ) : (
+          <TableSortDscIcon className="size-4" />
+        )
+      ) : (
+        <TableSortNormIcon className="size-4" />
       )}
     </div>
   );

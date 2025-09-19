@@ -10,5 +10,5 @@ const data = [
 ];
 
 export default function App() {
-  return <TanStackTable columns={columns} data={data} />;
+  return <>Tanstack</>;
 }
