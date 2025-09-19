@@ -178,7 +178,6 @@ const PaginationComponent: React.FC<PaginationProps> = ({
               }}
               aria-disabled={currentPage === 1}
               className={currentPage === 1 ? "opacity-50 " : ""}
-              size={undefined}
             />
           </PaginationItem>
 
@@ -201,7 +200,6 @@ const PaginationComponent: React.FC<PaginationProps> = ({
                       ? "bg-black text-white w-6 h-6 rounded-none "
                       : "rounded-none"
                   }`}
-                  size={undefined}
                 >
                   {pageNumber}
                 </PaginationLink>
@@ -218,7 +216,6 @@ const PaginationComponent: React.FC<PaginationProps> = ({
               }}
               aria-disabled={currentPage === totalPages}
               className={currentPage === totalPages ? "opacity-50 " : ""}
-              size={undefined}
             />
           </PaginationItem>
         </PaginationContent>
