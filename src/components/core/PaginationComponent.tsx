@@ -124,51 +124,48 @@ const PaginationComponent: React.FC<PaginationProps> = ({
   }, [currentPage, totalPages]);
 
   return (
-    <ShadCNPagination className="flex justify-between items-center !mx-0 !px-0 sticky bottom-0 shadow-inner-none !shadow-none !border-none">
-      <PaginationContent className="!px-0 pt-1 flex gap-5">
+    <ShadCNPagination className="flex justify-between items-center !mx-0 !px-3 sticky bottom-0 bg-white border-t shadow-none">
+      {/* Left side: rows per page + record count */}
+      <PaginationContent className="flex items-center gap-5">
         <Select
           value={selectedValue?.toString()}
           onValueChange={handleRowChange}
         >
-          <SelectTrigger className="w-24 text-xs !py-0 !h-8 border cursor-pointer">
-            <SelectValue
-              placeholder="Items per page"
-              className="font-normal text-xs!rounded-none "
-            />
+          <SelectTrigger className="w-24 h-8 text-xs border rounded-none cursor-pointer">
+            <SelectValue placeholder="Items per page" />
           </SelectTrigger>
-          <SelectContent className="w-[120px]  text-xs bg-white pointer">
+          <SelectContent className="w-[120px] text-xs bg-white">
             {limitOptions.map((item) => (
               <SelectItem
                 value={item.value?.toString()}
                 key={item.value}
-                className="cursor-pointer font-normal text-xs opacity-90"
+                className="cursor-pointer text-xs"
               >
                 {item.title}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
-        <div className="font-normal text-xs opacity-80">
+
+        <div className="text-xs opacity-80">
           {Math.min(firstIndex + 1, totalRecords)} -{" "}
           {Math.min(lastIndex, totalRecords)} of {totalRecords}
         </div>
       </PaginationContent>
 
-      <div className="flex justify-end items-center">
-        <PaginationContent className="px-1 py-0">
-          <div className="flex items-center font-normal text-xs opacity-80">
-            GoTo
-            <Input
-              value={inputPageValue}
-              onChange={handleInputChange}
-              onKeyDown={onKeyDownInPageChange}
-              className="h-6 w-10 text-center bg-gray-300 rounded-none text-xs ml-2"
-              placeholder="Page"
-            />
-          </div>
-        </PaginationContent>
+      {/* Right side: GoTo + navigation */}
+      <div className="flex items-center gap-3">
+        <div className="flex items-center text-xs opacity-80">
+          GoTo
+          <Input
+            value={inputPageValue}
+            onChange={handleInputChange}
+            onKeyDown={onKeyDownInPageChange}
+            className="h-6 w-10 ml-2 text-center bg-gray-200 rounded-none text-xs"
+          />
+        </div>
 
-        <PaginationContent className="px-1 py-0 font-normal">
+        <PaginationContent className="flex items-center gap-1">
           <PaginationItem>
             <PaginationPrevious
               href={currentPage === 1 ? undefined : "#"}
@@ -176,8 +173,9 @@ const PaginationComponent: React.FC<PaginationProps> = ({
                 e.preventDefault();
                 if (currentPage > 1) handlePageChange(currentPage - 1);
               }}
-              aria-disabled={currentPage === 1}
-              className={currentPage === 1 ? "opacity-50 " : ""}
+              className={
+                currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
+              }
             />
           </PaginationItem>
 
@@ -195,10 +193,10 @@ const PaginationComponent: React.FC<PaginationProps> = ({
                     e.preventDefault();
                     handlePageChange(pageNumber);
                   }}
-                  className={`text-xs ${
+                  className={`text-xs w-6 h-6 ${
                     pageNumber === currentPage
-                      ? "bg-black text-white w-6 h-6 rounded-none "
-                      : "rounded-none"
+                      ? "bg-black text-white"
+                      : "hover:bg-gray-200"
                   }`}
                 >
                   {pageNumber}
@@ -214,8 +212,11 @@ const PaginationComponent: React.FC<PaginationProps> = ({
                 e.preventDefault();
                 if (currentPage < totalPages) handlePageChange(currentPage + 1);
               }}
-              aria-disabled={currentPage === totalPages}
-              className={currentPage === totalPages ? "opacity-50 " : ""}
+              className={
+                currentPage === totalPages
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+              }
             />
           </PaginationItem>
         </PaginationContent>

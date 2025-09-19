@@ -236,7 +236,7 @@ const TanStackTable: FC<TanStackTableProps> = ({
       </div>
 
       {!loading && data?.length && paginationDetails ? (
-        <div className=" border-gray-200">
+        <div className="border-t border-gray-200">
           <PaginationComponent
             paginationDetails={paginationDetails}
             capturePageNum={capturePageNum}
@@ -348,14 +348,14 @@ const DataTable = ({
   heightClass,
 }: any) => {
   return (
-    <div className="w-full h-full flex flex-col">
-      <div className="w-full overflow-auto custom-scrollbar">
+    <div className="w-full h-[600px] flex flex-col">
+      <div className="flex-1 overflow-auto custom-scrollbar">
         <Table
           className={`w-full border border-gray-200 border-collapse min-w-full table-fixed ${
             tableClassName ?? ""
           }`}
         >
-          <TableHeader className="bg-black border-b">
+          <TableHeader className="bg-black border-b sticky top-0 z-10">
             {table.getHeaderGroups().map((headerGroup: any) => (
               <TableRow key={headerGroup.id} className={headerRowClassName}>
                 {headerGroup.headers.map(
@@ -363,7 +363,7 @@ const DataTable = ({
                     <TableHead
                       key={`${header.id}-${index}`}
                       colSpan={header.colSpan}
-                      className={`bg-black text-left px-3 py-2 text-sm font-normal text-white/90 sticky top-0 z-10 ${
+                      className={`bg-black text-left px-3 py-2 text-sm font-normal text-white/90 ${
                         headerCellClassName ?? ""
                       }`}
                       style={getColumnStyle(header.id, index)}
