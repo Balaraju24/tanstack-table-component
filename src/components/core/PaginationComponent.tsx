@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from "react";
+import { LimitOption, PaginationProps } from "../../lib/core";
 import { Input } from "../ui/input";
 import {
   PaginationContent,
@@ -16,7 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { LimitOption, PaginationProps } from "../../lib/core";
 
 const PaginationComponent: React.FC<PaginationProps> = ({
   capturePageNum,
@@ -124,7 +124,7 @@ const PaginationComponent: React.FC<PaginationProps> = ({
   }, [currentPage, totalPages]);
 
   return (
-    <ShadCNPagination className="flex justify-between items-center !mx-0 !px-0 sticky bottom-0 shadow-inner-none !shadow-none !bordeer-none">
+    <ShadCNPagination className="flex justify-between items-center !mx-0 !px-0 sticky bottom-0 shadow-inner-none !shadow-none !border-none">
       <PaginationContent className="!px-0 pt-1 flex gap-5">
         <Select
           value={selectedValue?.toString()}

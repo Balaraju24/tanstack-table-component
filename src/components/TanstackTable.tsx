@@ -236,12 +236,14 @@ const TanStackTable: FC<TanStackTableProps> = ({
       </div>
 
       {!loading && data?.length && paginationDetails ? (
-        <PaginationComponent
-          paginationDetails={paginationDetails}
-          capturePageNum={capturePageNum}
-          captureRowPerItems={captureRowPerItems}
-          initialPage={paginationDetails?.current_page || 1}
-        />
+        <div className=" border-gray-200">
+          <PaginationComponent
+            paginationDetails={paginationDetails}
+            capturePageNum={capturePageNum}
+            captureRowPerItems={captureRowPerItems}
+            initialPage={paginationDetails?.current_page || 1}
+          />
+        </div>
       ) : null}
     </div>
   );
