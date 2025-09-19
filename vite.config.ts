@@ -3,13 +3,12 @@ import react from "@vitejs/plugin-react-swc";
 import dts from "vite-plugin-dts";
 
 export default defineConfig({
-  plugins: [react(), dts()],
+  plugins: [react(), dts({ insertTypesEntry: true })],
   build: {
     lib: {
-      entry: "src/index.ts",
+      entry: "./src/index.ts",
       name: "TanstackTableComponent",
-      fileName: (format) => `index.${format}.js`,
-      formats: ["es", "cjs"], // make sure both get built
+      fileName: "index",
     },
     rollupOptions: {
       external: ["react", "react-dom", "@tanstack/react-table"],
