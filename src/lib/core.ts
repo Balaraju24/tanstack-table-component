@@ -52,3 +52,10 @@ export interface NoDataDisplayProps {
   onHoldMessage?: string;
   show?: boolean;
 }
+
+export type SortItemsProps = {
+  header: { id: string };
+  removeSortingForColumnIds?: string[];
+  sortBy?: string | null;
+  sortDirection?: "asc" | "desc" | null;
+};

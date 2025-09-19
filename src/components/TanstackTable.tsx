@@ -12,7 +12,7 @@ import { FC, useCallback, useState } from "react";
 // External UI building blocks (injectable if needed)
 
 import { useLocation } from "@tanstack/react-router";
-import { TanStackTableProps } from "../lib/core";
+import { SortItemsProps, TanStackTableProps } from "../lib/core";
 import NoDataDisplay from "./core/NoDataBlock";
 import PaginationComponent from "./core/PaginationComponent";
 import TableSortAscIcon from "./icons/sort-a-icon";
@@ -439,18 +439,13 @@ const DataTable = ({
 };
 
 /** Sorting icons */
+
 const SortItems = ({
   header,
   removeSortingForColumnIds,
-}: {
-  header: any;
-  removeSortingForColumnIds?: string[];
-}) => {
-  const location = useLocation();
-  const searchParams = new URLSearchParams(location?.search);
-  const sortBy = searchParams.get("order_by")?.split(":")[0];
-  const sortDirection = searchParams.get("order_by")?.split(":")[1];
-
+  sortBy,
+  sortDirection,
+}: SortItemsProps) => {
   if (removeSortingForColumnIds?.includes(header.id)) return null;
 
   return (
