@@ -37,7 +37,7 @@ interface pageProps {
   loading?: boolean;
   heightClass?: string;
   getData?: any;
-  paginationDetails: any;
+  paginationDetails?: any;
   removeSortingForColumnIds?: string[];
   noDataLabel?: string;
 }

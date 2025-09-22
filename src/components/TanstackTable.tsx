@@ -8,10 +8,6 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { FC, useCallback, useState } from "react";
-
-// External UI building blocks (injectable if needed)
-
-import { useLocation } from "@tanstack/react-router";
 import { SortItemsProps, TanStackTableProps } from "../lib/core";
 import NoDataDisplay from "./core/NoDataBlock";
 import PaginationComponent from "./core/PaginationComponent";
@@ -27,8 +23,6 @@ import {
   TableHeader,
   TableRow,
 } from "./ui/table";
-
-// Icons (can be swapped by consumers)
 
 const TanStackTable: FC<TanStackTableProps> = ({
   columns,
@@ -355,7 +349,7 @@ const DataTable = ({
             tableClassName ?? ""
           }`}
         >
-          <TableHeader className="bg-black border-b sticky top-0 z-10">
+          <TableHeader>
             {table.getHeaderGroups().map((headerGroup: any) => (
               <TableRow key={headerGroup.id} className={headerRowClassName}>
                 {headerGroup.headers.map(
@@ -363,7 +357,7 @@ const DataTable = ({
                     <TableHead
                       key={`${header.id}-${index}`}
                       colSpan={header.colSpan}
-                      className={`bg-black text-left px-3 py-2 text-sm font-normal text-white/90 ${
+                      className={`text-left px-3 py-2 text-sm font-normal sticky top-0 z-10 ${
                         headerCellClassName ?? ""
                       }`}
                       style={getColumnStyle(header.id, index)}
