@@ -349,7 +349,7 @@ const DataTable = ({
             tableClassName ?? ""
           }`}
         >
-          <TableHeader>
+          <TableHeader className="bg-white sticky top-0 z-20">
             {table.getHeaderGroups().map((headerGroup: any) => (
               <TableRow key={headerGroup.id} className={headerRowClassName}>
                 {headerGroup.headers.map(
@@ -357,7 +357,7 @@ const DataTable = ({
                     <TableHead
                       key={`${header.id}-${index}`}
                       colSpan={header.colSpan}
-                      className={`text-left px-3 py-2 text-sm font-normal sticky top-0 z-10 ${
+                      className={`text-left px-3 py-2 text-sm font-normal bg-white sticky top-0 z-20 ${
                         headerCellClassName ?? ""
                       }`}
                       style={getColumnStyle(header.id, index)}

@@ -175,40 +175,16 @@ const columns = [
 
     cell: (info: any) => <span className="text-xs">{info.getValue()}</span>,
   },
-  {
-    accessorFn: (row: any) =>
-      row.department || (row.id % 2 === 0 ? "Engineering" : "HR"),
-    id: "department",
-    header: () => <span className="text-sm">Department</span>,
-    footer: (props: any) => props.column.id,
-    size: 130,
-
-    cell: (info: any) => <span className="text-xs">{info.getValue()}</span>,
-  },
-  {
-    accessorFn: (row: any) => row,
-    id: "actions",
-    header: () => <span className="text-sm">Actions</span>,
-    footer: (props: any) => props.column.id,
-    size: 180,
-    cell: () => (
-      <div className="flex space-x-3 items-center text-xs cursor-pointer">
-        <span title="View Service">View</span>
-        <span>Manage</span>
-      </div>
-    ),
-  },
 ];
 
 const App = () => {
   return (
-    <div className="p-0">
-      <h2 className="mb-4 font-bold text-xl">TanStack Table Example</h2>
-      <div className="overflow-auto w-full">
+    <div className="h-full space-y-1 relative">
+      <div className="h-full">
         <TanStackTable
           columns={columns}
           data={userData}
-          heightClass="h-[calc(100vh-300px)]"
+          heightClass="h-[calc(100vh-142px)] 3xl:h-[calc(100vh-154px)]"
           wrapperClassName="rounded-lg border border-gray-200 shadow-sm bg-white overflow-hidden"
           tableClassName="min-w-full border-collapse text-sm"
           headerRowClassName="bg-gray-100 border-b border-gray-200"
