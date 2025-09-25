@@ -23,6 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from "./ui/table";
+import { useLocation } from "@tanstack/react-router";
 
 const TanStackTable: FC<TanStackTableProps> = ({
   columns,
@@ -44,6 +45,7 @@ const TanStackTable: FC<TanStackTableProps> = ({
   rowClassName,
   cellClassName,
 }) => {
+  const location = useLocation();
   const searchParams = new URLSearchParams(location?.search);
   const [sorting, setSorting] = useState<SortingState>([]);
 
