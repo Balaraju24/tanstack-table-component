@@ -244,6 +244,7 @@ const TanStackTable: FC<TanStackTableProps> = ({
 };
 
 /** Extracted loading skeleton */
+
 const LoadingTable = ({
   columns,
   paginationDetails,
@@ -265,7 +266,7 @@ const LoadingTable = ({
           tableClassName ?? ""
         }`}
       >
-        <TableHeader className="bg-black border-b">
+        <TableHeader className="bg-black border-b sticky top-0 z-10">
           <TableRow className={headerRowClassName}>
             {columns.map((header: any, index: number) => (
               <TableHead
@@ -276,7 +277,9 @@ const LoadingTable = ({
                 style={getColumnStyle(header.id, index)}
                 onClick={() => sortAndGetData(header)}
               >
-                {header.header}
+                {typeof header.header === "function"
+                  ? flexRender(header.header, { column: header })
+                  : header.header}
                 <SortItems
                   header={header}
                   removeSortingForColumnIds={removeSortingForColumnIds}
@@ -342,7 +345,7 @@ const DataTable = ({
   heightClass,
 }: any) => {
   return (
-    <div className="w-full h-[600px] flex flex-col">
+    <div className="w-full h-[600px] flex flex-col overflow-hidden">
       <div className="flex-1 overflow-auto custom-scrollbar">
         <Table
           className={`w-full border border-gray-200 border-collapse min-w-full table-fixed ${
