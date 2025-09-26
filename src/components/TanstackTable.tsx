@@ -45,8 +45,10 @@ const TanStackTable: FC<TanStackTableProps> = ({
   rowClassName,
   cellClassName,
 }) => {
-  const location = useLocation();
-  const searchParams = new URLSearchParams(location?.search);
+  const location = typeof window !== "undefined" ? useLocation() : null; // Avoid useLocation during SSR
+  const searchParams = location
+    ? new URLSearchParams(location.search)
+    : new URLSearchParams(); // Fallback to empty searchParams
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const shouldStickyLastColumn = columns.length > 6;
@@ -65,6 +67,7 @@ const TanStackTable: FC<TanStackTableProps> = ({
   /** pagination handlers */
   const capturePageNum = useCallback(
     (value: number) => {
+      if (!getData) return;
       getData({
         ...searchParams,
         page_size: searchParams.get("page_size")
@@ -80,6 +83,7 @@ const TanStackTable: FC<TanStackTableProps> = ({
 
   const captureRowPerItems = useCallback(
     (value: number) => {
+      if (!getData) return;
       getData({
         ...searchParams,
         page_size: value,
@@ -94,7 +98,7 @@ const TanStackTable: FC<TanStackTableProps> = ({
   /** sorting handler */
   const sortAndGetData = useCallback(
     (header: any) => {
-      if (removeSortingForColumnIds?.includes(header.id)) return;
+      if (removeSortingForColumnIds?.includes(header.id) || !getData) return;
 
       let sortBy = header.id;
       let orderBy = `${sortBy}:asc`;
