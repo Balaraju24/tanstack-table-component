@@ -336,6 +336,7 @@ const DataTable = ({
   columns,
   getColumnStyle,
   getCellStyle,
+  wrapperClassName,
   headerRowClassName,
   headerCellClassName,
   tableClassName,
@@ -351,14 +352,19 @@ const DataTable = ({
   heightClass,
 }: any) => {
   return (
-    <div className="w-full h-[600px] flex flex-col overflow-hidden">
-      <div className="flex-1 overflow-auto custom-scrollbar">
+    <div className={`w-full rounded-md bg-white ${wrapperClassName ?? ""}`}>
+      <div
+        className={`w-full relative bg-white ${
+          heightClass || "h-96"
+        } overflow-auto custom-scrollbar`}
+        style={{ display: "flex", flexDirection: "column" }}
+      >
         <Table
-          className={`w-full border border-gray-200 border-collapse min-w-full table-fixed ${
+          className={`w-full border-collapse min-w-full table-fixed ${
             tableClassName ?? ""
           }`}
         >
-          <TableHeader className="bg-white sticky top-0 z-20">
+          <TableHeader className="bg-white sticky top-0 z-20 border-b border-gray-200">
             {table.getHeaderGroups().map((headerGroup: any) => (
               <TableRow key={headerGroup.id} className={headerRowClassName}>
                 {headerGroup.headers.map(
